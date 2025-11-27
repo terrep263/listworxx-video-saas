@@ -1,15 +1,23 @@
 
-
 import React, { useState } from 'react';
+import { 
+  generateVerificationCode, 
+  storeEmailVerification, 
+  sendVerificationEmail,
+  grantFreeTrial 
+} from '../lib/emailVerification';
 
+interface LandingPageProps {
+  onGetStarted: () => void;
+}
 
-export default function LandingPage() {
+export default function LandingPage({ onGetStarted }: LandingPageProps) {
   const [email, setEmail] = useState('');
   const [emailSubmitted, setEmailSubmitted] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const handleEmailSubmit = (e: React.FormEvent) => {
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSuccess('');
@@ -17,9 +25,24 @@ export default function LandingPage() {
       setError('Please enter a valid email address.');
       return;
     }
+    
+    // Generate and store verification code
+    const code = generateVerificationCode();
+    storeEmailVerification(email, code);
+    
+    // Send verification email (logs to console in dev mode)
+    await sendVerificationEmail(email, code);
+    
+    // Grant free trial access
+    grantFreeTrial();
+    
     setEmailSubmitted(true);
-    setSuccess(`Check your email! We sent a verification link to ${email}`);
-    // TODO: Integrate with backend/email service
+    setSuccess(`Welcome! Your free video credit has been activated.`);
+    
+    // Redirect to video generator after a short delay
+    setTimeout(() => {
+      onGetStarted();
+    }, 1500);
   };
 
   return (
